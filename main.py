@@ -82,8 +82,7 @@ wall = 1
 
 from graph import Graph
 from a_star import a_star
-from utils import export_json, flood_fill
-
+from utils import export_json, flood_fill, bake_kiosk_tree
 # Initialize data structures
 graph = Graph(building)
 
@@ -92,17 +91,24 @@ start_node_id = "1,1,0"
 goal_node_id = "28,20,2"
 
 flood_fill(building, room_registry, (3,3,0), 301, "math classroom")
-export_json(building, graph, room_registry)
+kiosk_location_id = "15,20,0"
 
-start_node = graph.nodes[start_node_id]
-goal_node = graph.nodes[goal_node_id]
+# 3. Prune the graph!
+# This throws away every node that isn't on a direct path from the kiosk to a room.
+optimized_kiosk_graph = bake_kiosk_tree(graph, room_registry, kiosk_location_id)
 
-# Calculate the route
-winning_path = a_star(graph, start_node, goal_node)
+export_json(building, optimized_kiosk_graph, room_registry, filename="kiosk_main_lobby.json")
 
-if winning_path:
-    print(f"Path found! It takes {len(winning_path)} steps.")
-    for node in winning_path:
-        print(f"-> Walk to Floor {node.z}, X:{node.x}, Y:{node.y}")
-else:
-    print("No valid path exists between those two points.")
+# export_json(building, graph, room_registry)
+# start_node = graph.nodes[start_node_id]
+# goal_node = graph.nodes[goal_node_id]
+
+# # Calculate the route
+# winning_path = a_star(graph, start_node, goal_node)
+
+# if winning_path:
+#     print(f"Path found! It takes {len(winning_path)} steps.")
+#     for node in winning_path:
+#         print(f"-> Walk to Floor {node.z}, X:{node.x}, Y:{node.y}")
+# else:
+#     print("No valid path exists between those two points.")

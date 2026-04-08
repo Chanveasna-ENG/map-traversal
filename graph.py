@@ -40,7 +40,7 @@ class Graph:
                 for x in range(self.cols):
                     val = self.building[z][y][x]
                     node_id = ""
-                    if val != self.wall:
+                    if val != self.wall :
                         node_id = f"{x},{y},{z}"
                         self.nodes[node_id] = Node(node_id, x, y, z) 
                     
