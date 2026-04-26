@@ -1,5 +1,8 @@
+import { Graph } from './graph.js';
+import { aStar } from './a_star.js';
+import { exportJson, floodFill, bakeKioskTree, type RoomRegistry } from './utils.js';
 
-floor_0 = [
+const floor0: number[][] = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -22,9 +25,9 @@ floor_0 = [
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-]
+];
 
-floor_1 = [
+const floor1: number[][] = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -47,9 +50,9 @@ floor_1 = [
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-]
+];
 
-floor_2 = [
+const floor2: number[][] = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -72,37 +75,42 @@ floor_2 = [
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-]
+];
 
-building = {0: floor_0, 1: floor_1, 2: floor_2}
-room_registry = {}
-# Note: 0 = space, 1 = wall, 2 = door/walkable object, 100-200 = stair/elevator, 300-400 = room id
-wall = 1
+const building: Record<number, number[][]> = { 0: floor0, 1: floor1, 2: floor2 };
+const roomRegistry: RoomRegistry = {};
+// Note: 0 = space, 1 = wall, 2 = door/walkable object, 100-200 = stair/elevator, 300-400 = room id
+const wall = 1;
 
 
-from graph import Graph
-from a_star import a_star
-from utils import export_json, flood_fill
+// Initialize data structures
+const graph = new Graph(building);
 
-# Initialize data structures
-graph = Graph(building)
+// Assuming you want to go from Floor 0 Entrance to Floor 2 Library
+const startNodeId = "1,1,0";
+const goalNodeId = "28,20,2";
 
-# Assuming you want to go from Floor 0 Entrance to Floor 2 Library
-start_node_id = "1,1,0"
-goal_node_id = "28,20,2"
+floodFill(building, roomRegistry, [3, 3, 0], 301, "math classroom");
+const kioskLocationId = "15,20,0";
 
-flood_fill(building, room_registry, (3,3,0), 301, "math classroom")
-export_json(building, graph, room_registry)
+// 3. Prune the graph!
+// This throws away every node that isn't on a direct path from the kiosk to a room.
+const optimizedKioskGraph = bakeKioskTree(graph, roomRegistry, kioskLocationId);
 
-start_node = graph.nodes[start_node_id]
-goal_node = graph.nodes[goal_node_id]
+exportJson(building, optimizedKioskGraph!, roomRegistry, "kiosk_main_lobby.json");
 
-# Calculate the route
-winning_path = a_star(graph, start_node, goal_node)
+// exportJson(building, graph, roomRegistry);
+// const startNode = graph.nodes[startNodeId];
+// const goalNode = graph.nodes[goalNodeId];
 
-if winning_path:
-    print(f"Path found! It takes {len(winning_path)} steps.")
-    for node in winning_path:
-        print(f"-> Walk to Floor {node.z}, X:{node.x}, Y:{node.y}")
-else:
-    print("No valid path exists between those two points.")
+// // Calculate the route
+// const winningPath = aStar(graph, startNode, goalNode);
+
+// if (winningPath) {
+//     console.log(`Path found! It takes ${winningPath.length} steps.`);
+//     for (const node of winningPath) {
+//         console.log(`-> Walk to Floor ${node.z}, X:${node.x}, Y:${node.y}`);
+//     }
+// } else {
+//     console.log("No valid path exists between those two points.");
+// }
