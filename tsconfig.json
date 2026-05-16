@@ -11,6 +11,6 @@
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["*.ts"],
+  "include": ["typescript/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
